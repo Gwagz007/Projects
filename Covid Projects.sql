@@ -1,0 +1,313 @@
+--Looking At Our Data
+SELECT TOP 10 *
+FROM
+PortfolioProject..CovidDeath
+ORDER BY 3, 4
+
+---Data Cleaning
+Alter Table PortfolioProject..CovidDeath
+Drop Column Date
+
+
+Select Replace(Totaldeaths, ' ', '') As Totaldeath
+From PortfolioProject..CovidDeath
+
+Select Replace(Totalcases, ' ', '') As Totalcase
+From PortfolioProject..CovidDeath
+
+
+SELECT  Converted_Date, Continent, Location, Population, Replace(Totaldeaths, ' ', '') As Totaldeath, Replace(Totalcases, ' ', '') As Totalcase
+FROM PortfolioProject..CovidDeath
+WHERE Continent is not null and Totalcases is not null
+Order By 1
+
+
+--Looking At Situations Where Patiets Had Other Medical Conditions And Age
+ Select Continent, Location, Population, Max(TotalCases) As TotalCases, Max(TotalDeaths) As Totaldeaths
+ From PortfolioProject..CovidDeath
+ Where totaldeaths > '20000' and femalesmokers is not null and aged65older is not null and extremepoverty > '100'
+ Group by Continent, Location, Population
+ Order By TotalDeaths 
+
+ Select Continent, Location, Population, Max(TotalCases) As TotalCases, Max(TotalDeaths) As Totaldeaths
+ From PortfolioProject..CovidDeath
+ Where totaldeaths > '20000' and malesmokers is not null and aged65older is not null and extremepoverty < '100' and continent is not null
+ Group by Continent, Location, Population
+ Order By TotalDeaths 
+
+
+
+--Looking at Global Total Cases vs Total Deaths 
+SELECT 
+    Converted_Date, Continent, Location, Population, 
+    REPLACE(Totaldeaths, ' ', '') AS Totaldeath, 
+    REPLACE(Totalcases, ' ', '') AS Totalcase, 
+    CASE 
+        WHEN TRY_CAST(REPLACE(Totaldeaths, ' ', '') AS INT) IS NULL OR TRY_CAST(REPLACE(Totalcases, ' ', '') AS INT) IS NULL THEN NULL
+        ELSE (TRY_CAST(REPLACE(Totaldeaths, ' ', '') AS DECIMAL(18, 2)) / TRY_CAST(REPLACE(Totalcases, ' ', '') AS DECIMAL(18, 2))) * 100
+    END AS Percentage
+FROM PortfolioProject..CovidDeath
+WHERE Continent IS NOT NULL AND Totalcases IS NOT NULL
+ORDER BY Converted_Date;
+
+
+--Looking at Nigeria's Total Cases vs Total Deaths 
+SELECT 
+    Converted_Date, Continent, Location, Population, 
+    REPLACE(Totaldeaths, ' ', '') AS Totaldeath, 
+    REPLACE(Totalcases, ' ', '') AS Totalcase, 
+    CASE 
+        WHEN TRY_CAST(REPLACE(Totaldeaths, ' ', '') AS INT) IS NULL OR TRY_CAST(REPLACE(Totalcases, ' ', '') AS INT) IS NULL THEN NULL
+        ELSE (TRY_CAST(REPLACE(Totaldeaths, ' ', '') AS DECIMAL(18, 2)) / TRY_CAST(REPLACE(Totalcases, ' ', '') AS DECIMAL(18, 2))) * 100
+    END AS Percentage
+FROM PortfolioProject..CovidDeath
+WHERE Continent IS NOT NULL AND Totalcases IS NOT NULL and location like '%Nigeria' and totaldeaths is not null
+ORDER BY Converted_Date;
+
+
+--Looking at Global Total Cases vs Total Deaths in Relation to Population
+SELECT Distinct Continent, Location, Population, TotalCases, (Totalcases/Population) As DeathPercentage
+FROM PortfolioProject..CovidDeath
+WHERE Continent is not null and Totalcases is not null 
+Order By 1
+
+--Looking at Nigeria Total Cases vs Total Deaths in Relation to Population
+SELECT Distinct Continent, Location, Population, TotalCases, (Totalcases/Population) As Percentofpolpulationinfected
+FROM PortfolioProject..CovidDeath
+WHERE Continent is not null and Totalcases is not null and location like '%Nigeria'
+Order By 1
+
+
+--Looking at Countries with high infection
+SELECT Continent, Location, Population, Max(TotalCases) As Highestinfectioncount, Max((Totalcases/Population)) As Percentofpolpulationinfected
+FROM PortfolioProject..CovidDeath
+WHERE Continent is not null and Totalcases is not null
+Group By Continent, Location, Population
+Order By 5 desc
+
+--Looking at African Countries with high infection
+SELECT Continent, Location, Population, Cast(Max(TotalCases)As Int) As Highestinfectioncount, Max((Totalcases/Population)) As Percentofpolpulationinfected
+FROM PortfolioProject..CovidDeath
+WHERE Continent is not null and Totalcases is not null and Continent like '%Africa%'
+Group By Continent, Location, Population
+Order By 5 desc
+
+
+---Looking At Countries With High Deaths
+Select Location, Cast(Max(totaldeaths)As Int) As TotalDeathcount  
+From PortfolioProject..CovidDeath
+Where Continent is not null
+Group by location
+Order By TotalDeathcount Desc
+
+---Looking At Continent With High Deaths
+Select Continent, Cast(Max(totaldeaths)As Int) As TotalDeathcount
+From PortfolioProject..CovidDeath
+Where Continent is not null
+Group by Continent
+Order By TotalDeathcount Desc
+
+
+
+--Percentage Of New Cases And New Death When COmbined
+SELECT Converted_Date, REPLACE(newcases, ' ', '') AS Totalcases, REPLACE(newdeaths, ' ', '') AS Totaldeath, 
+CASE WHEN TRY_CAST(REPLACE(Newcases, ' ', '') AS INT) IS NULL OR TRY_CAST(REPLACE(newdeaths, ' ', '') AS INT) IS NULL THEN NULL
+WHEN TRY_CAST(REPLACE(newdeaths, ' ', '') AS DECIMAL(18, 2)) = 0 THEN NULL  -- Handle divide by zero
+ELSE (TRY_CAST(REPLACE(Newcases, ' ', '') AS DECIMAL(18, 2)) / TRY_CAST(REPLACE(newdeaths, ' ', '') AS DECIMAL(18, 2))) * 100
+END AS Percentage
+FROM PortfolioProject..CovidDeath
+WHERE Continent IS NOT NULL 
+ORDER BY Converted_Date;
+
+
+--Looking at Vaccination Data
+SELECT TOP 10 *
+FROM PortfolioProject..Vaccination
+ORDER BY 3, 4
+
+--Cleaning Data
+Select Date, convert(Date,Date) AS Converted_date
+From PortfolioProject..Vaccination
+
+Alter Table PortfolioProject..Vaccination
+Add Converted_Date Date;
+
+Update PortfolioProject..Vaccination
+Set Date = convert(Date,Date)
+
+UPDATE PortfolioProject..Vaccination
+SET Converted_Date = [Date];
+
+Alter Table PortfolioProject..Vaccination
+Drop Column Date
+
+
+---Looking at some data I will work with
+Select Converted_date, Continent, Location, New_tests, Positive_rate, Total_vaccinations, People_fully_vaccinated, Total_boosters
+From PortfolioProject..Vaccination
+Where continent is not null 
+Order by New_tests Desc
+
+
+Select Converted_date, Continent, Location, New_tests, Positive_rate, Total_vaccinations, People_fully_vaccinated, Total_boosters
+From PortfolioProject..Vaccination
+Where continent is not null and Location Like '%Nigeria%'
+Order by New_tests Desc
+
+
+
+---Joining both tables
+Select *
+From PortfolioProject..CovidDeath Dea
+Join PortfolioProject..Vaccination Vac
+On dea.Location = Vac.Location
+And Dea.Converted_Date = Vac.Converted_Date
+
+
+
+--Total Vaccination Per-Day In Relation To Total Population
+Select dea.Continent, dea.Location, dea.Converted_Date, dea.Population, vac.New_vaccinations
+From PortfolioProject..CovidDeath Dea
+Join PortfolioProject..Vaccination Vac
+On dea.Location = Vac.Location
+And Dea.Converted_Date = Vac.Converted_Date
+Where dea.continent is not null
+Order by 2,3
+
+
+--Total Vaccination Per-Day In Nigeria In Relation To Total Population
+Select dea.Continent, dea.Location, dea.Converted_Date, dea.Population, vac.New_vaccinations
+From PortfolioProject..CovidDeath Dea
+Join PortfolioProject..Vaccination Vac
+On dea.Location = Vac.Location
+And Dea.Converted_Date = Vac.Converted_Date
+Where dea.continent is not null and dea.Location like '%Nigeria%'
+Order by 2,3
+
+
+--Population vs Vaccination Rolling Count
+Select dea.Continent, dea.Location, dea.Converted_Date, dea.Population, vac.New_vaccinations,
+Sum(Convert(bigint, vac.New_vaccinations)) Over (Partition by dea.Location Order by dea.location
+, dea.converted_date) as RollingPeopleVaccinated
+From PortfolioProject..CovidDeath Dea
+Join PortfolioProject..Vaccination Vac
+On dea.Location = Vac.Location
+And Dea.Converted_Date = Vac.Converted_Date
+Where dea.continent is not null and Vac.new_vaccinations is not null
+Order by 2,3
+
+
+--Nigeria's Population vs Vaccination Rolling Count
+Select dea.Continent, dea.Location, dea.Converted_Date, dea.Population, vac.New_vaccinations,
+Sum(Convert(bigint, vac.New_vaccinations)) Over (Partition by dea.Location Order by dea.location
+, dea.converted_date) as RollingPeopleVaccinated
+From PortfolioProject..CovidDeath Dea
+Join PortfolioProject..Vaccination Vac
+On dea.Location = Vac.Location
+And Dea.Converted_Date = Vac.Converted_Date
+Where dea.continent is not null and Vac.new_vaccinations is not null and dea.location like '%Nigeria%'
+Order by 2,3
+
+
+
+--Using CTE To Get Percentage Of Population Vaccinated
+With PopvsVac(Continent, Location, Converted_date, Population, New_Vaccinations, RollingPeopleVaccinated)
+as
+(
+Select dea.Continent, dea.Location, dea.Converted_Date, dea.Population, vac.New_vaccinations,
+Sum(Convert(bigint, vac.New_vaccinations)) Over (Partition by dea.Location Order by dea.location
+, dea.converted_date) as RollingPeopleVaccinated
+From PortfolioProject..CovidDeath Dea
+Join PortfolioProject..Vaccination Vac
+On dea.Location = Vac.Location
+And Dea.Converted_Date = Vac.Converted_Date
+Where dea.continent is not null and Vac.new_vaccinations is not null
+--Order by 2,3
+)
+Select *, (RollingpeopleVaccinated/Population)*100 as VaccinatedPercentage
+From PopvsVac
+
+
+
+--Using CTE To Get Percentage Of Population Vaccinated in Nigeria
+With PopvsVac(Continent, Location, Converted_date, Population, New_Vaccinations, RollingPeopleVaccinated)
+as
+(
+Select dea.Continent, dea.Location, dea.Converted_Date, dea.Population, vac.New_vaccinations,
+Sum(Convert(bigint, vac.New_vaccinations)) Over (Partition by dea.Location Order by dea.location
+, dea.converted_date) as RollingPeopleVaccinated
+From PortfolioProject..CovidDeath Dea
+Join PortfolioProject..Vaccination Vac
+On dea.Location = Vac.Location
+And Dea.Converted_Date = Vac.Converted_Date
+Where dea.continent is not null and Vac.new_vaccinations is not null and dea.Location like '%Nigeria%'
+--Order by 2,3
+)
+Select *, (RollingpeopleVaccinated/Population)*100 as VaccinatedPercentage
+From PopvsVac
+
+
+
+--Using Temp Table
+Drop Table If exists #PercentPopulationVaccinated
+Create Table #PercentPopulationVaccinated
+( 
+Continent nvarchar(255),
+Location nvarchar(255),
+Date Date,
+Population numeric,
+New_vaccinations numeric,
+RollingPeopleVaccinated numeric
+)
+Insert into #PercentPopulationVaccinated
+Select dea.Continent, dea.Location, dea.Converted_Date, dea.Population, vac.New_vaccinations,
+Sum(Convert(bigint, vac.New_vaccinations)) Over (Partition by dea.Location Order by dea.location, 
+dea.converted_date) as RollingPeopleVaccinated
+From PortfolioProject..CovidDeath Dea
+Join PortfolioProject..Vaccination Vac
+On dea.Location = Vac.Location
+And Dea.Converted_Date = Vac.Converted_Date
+Where dea.continent is not null and Vac.new_vaccinations is not null
+Order by 2,3
+
+Select *, (RollingPeopleVaccinated/Population)*100 as VaccinatedPercentage
+From #PercentPopulationVaccinated
+ 
+
+
+
+
+Drop Table If exists #PercentPopulationVaccinated
+Create Table #PercentPopulationVaccinated
+( 
+Continent nvarchar(255),
+Location nvarchar(255),
+Date Date,
+Population numeric,
+New_vaccinations numeric,
+RollingPeopleVaccinated numeric
+)
+Insert into #PercentPopulationVaccinated
+Select dea.Continent, dea.Location, dea.Converted_Date, dea.Population, vac.New_vaccinations,
+Sum(Convert(bigint, vac.New_vaccinations)) Over (Partition by dea.Location Order by dea.location, 
+dea.converted_date) as RollingPeopleVaccinated
+From PortfolioProject..CovidDeath Dea
+Join PortfolioProject..Vaccination Vac
+On dea.Location = Vac.Location
+And Dea.Converted_Date = Vac.Converted_Date
+Where dea.continent is not null and Vac.new_vaccinations is not null and dea.location like '%Nigeria%'
+Order by 2,3
+Select *, (RollingPeopleVaccinated/Population)*100 as VaccinatedPercentage
+From #PercentPopulationVaccinated
+
+
+Create View PopulationVaccinated as
+Select dea.Continent, dea.Location, dea.Converted_Date, dea.Population, vac.New_vaccinations,
+Sum(Convert(bigint, vac.New_vaccinations)) Over (Partition by dea.Location Order by dea.location
+, dea.converted_date) as RollingPeopleVaccinated
+From PortfolioProject..CovidDeath Dea
+Join PortfolioProject..Vaccination Vac
+On dea.Location = Vac.Location
+And Dea.Converted_Date = Vac.Converted_Date
+Where dea.continent is not null and Vac.new_vaccinations is not null
+--Order by 2,3 
